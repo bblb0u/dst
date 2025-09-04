@@ -17,13 +17,27 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     env:
-      IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/dst
+      IMAGE_NAME: bblb0u/dst
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Compute date tag
-        run: echo "DATE_TAG=$(date -u +%Y%m%d)" >> "$GITHUB_ENV"
+      - name: Compute image tags
+        run: |
+          commit_date="$(git show -s --format=%aI "$GITHUB_SHA")"
+          date_tag="$(date -u -d "$commit_date" +%Y%m%d)"
+          today="$(date -u +%Y%m%d)"
+
+          {
+            echo "IMAGE_TAGS<<EOF"
+            echo "${IMAGE_NAME}:${date_tag}"
+
+            if [ "$date_tag" = "$today" ]; then
+              echo "${IMAGE_NAME}:latest"
+            fi
+
+            echo "EOF"
+          } >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -39,8 +53,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: |
-            ${{ env.IMAGE_NAME }}:latest
-            ${{ env.IMAGE_NAME }}:${{ env.DATE_TAG }}
+          tags: ${{ env.IMAGE_TAGS }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
