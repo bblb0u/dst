@@ -1,8 +1,10 @@
 FROM debian:bookworm-slim
 
-RUN apt update && apt install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
     lib32gcc-s1 \
     libcurl4-gnutls-dev \
+    logrotate \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
@@ -10,8 +12,11 @@ WORKDIR /root/steam/steamcmd
 
 RUN wget -qO- "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" | tar -xz
 
-COPY run_dedicated_servers.sh /root/steam/run_dedicated_servers.sh
+COPY defaults /opt/dst/defaults
+COPY scripts/run_dedicated_servers.sh /usr/local/bin/dst-entrypoint
 
-RUN chmod +x /root/steam/run_dedicated_servers.sh
+RUN chmod +x /usr/local/bin/dst-entrypoint
 
-CMD ["/root/steam/run_dedicated_servers.sh"]
+VOLUME ["/root/.klei/DoNotStarveTogether", "/root/steam/dst"]
+
+CMD ["dst-entrypoint"]

@@ -1,0 +1,9 @@
+runtime/
+steamcmd/
+.git/
+.gitignore
+.github/
+README.md
+*.log
+*.tar.gz
+*.tmp
